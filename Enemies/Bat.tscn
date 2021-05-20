@@ -1,10 +1,15 @@
-[gd_scene load_steps=14 format=2]
+[gd_scene load_steps=18 format=2]
 
 [ext_resource path="res://Enemies/Bat.png" type="Texture" id=1]
 [ext_resource path="res://Shadows/SmallShadow.png" type="Texture" id=2]
 [ext_resource path="res://Collision Boxes/Hurtbox.tscn" type="PackedScene" id=3]
 [ext_resource path="res://Enemies/Bat.gd" type="Script" id=4]
 [ext_resource path="res://Stats.tscn" type="PackedScene" id=5]
+[ext_resource path="res://Collision Boxes/PlayerDetectionArea.tscn" type="PackedScene" id=6]
+[ext_resource path="res://Collision Boxes/Hitbox.tscn" type="PackedScene" id=7]
+
+[sub_resource type="CircleShape2D" id=9]
+radius = 25.0
 
 [sub_resource type="AtlasTexture" id=1]
 atlas = ExtResource( 1 )
@@ -41,14 +46,28 @@ radius = 3.62252
 radius = 6.0
 height = 6.0
 
+[sub_resource type="CircleShape2D" id=10]
+radius = 5.15006
+
 [node name="Bat" type="KinematicBody2D"]
 collision_layer = 16
 script = ExtResource( 4 )
 
+[node name="PlayerDetectionArea" parent="." instance=ExtResource( 6 )]
+
+[node name="CollisionShape2D" parent="PlayerDetectionArea" index="0"]
+modulate = Color( 1, 1, 1, 0.231373 )
+show_behind_parent = true
+position = Vector2( 0.150429, 0.150436 )
+shape = SubResource( 9 )
+
+[node name="Stats" parent="." instance=ExtResource( 5 )]
+max_health = 2
+
 [node name="BodySprite" type="AnimatedSprite" parent="."]
 frames = SubResource( 6 )
 animation = "Fly"
-frame = 3
+frame = 1
 playing = true
 offset = Vector2( 0, -12 )
 
@@ -59,16 +78,24 @@ texture = ExtResource( 2 )
 shape = SubResource( 7 )
 
 [node name="Hurtbox" parent="." instance=ExtResource( 3 )]
+monitoring = true
 collision_layer = 8
 
 [node name="CollisionShape2D" parent="Hurtbox" index="0"]
 position = Vector2( 0, -13 )
 shape = SubResource( 8 )
 
-[node name="Stats" parent="." instance=ExtResource( 5 )]
-max_health = 2
+[node name="Hitbox" parent="." instance=ExtResource( 7 )]
+collision_mask = 4
 
-[connection signal="area_entered" from="Hurtbox" to="." method="_on_Hurtbox_area_entered"]
+[node name="CollisionShape2D" parent="Hitbox" index="0"]
+position = Vector2( 0, -13 )
+rotation = 0.140127
+shape = SubResource( 10 )
+
 [connection signal="no_health" from="Stats" to="." method="_on_Stats_no_health"]
+[connection signal="area_entered" from="Hurtbox" to="." method="_on_Hurtbox_area_entered"]
 
+[editable path="PlayerDetectionArea"]
 [editable path="Hurtbox"]
+[editable path="Hitbox"]

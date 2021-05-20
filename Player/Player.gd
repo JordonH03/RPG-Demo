@@ -9,6 +9,7 @@ export var FRICTION = 500
 ## Initializes player velocity variable
 var velocity = Vector2.ZERO
 var roll_vector = Vector2.ZERO
+var stats = PlayerStats
 
 # Animation Variables
 
@@ -24,12 +25,14 @@ onready var animationPlayer = $AnimationPlayer
 onready var animationTree = $AnimationTree
 onready var animationState = animationTree.get("parameters/playback")
 
-# Hitbox node variable
+# Collision node variables
 onready var swordHitbox = $HitboxPivot/SwordHitbox
+onready var hurtbox = $Hurtbox
 
 func _ready():
 	animationTree.active = true # Turns animation on
 	swordHitbox.knockback_vector = roll_vector
+	stats.connect("no_health", self, "queue_free")
 	
 
 func _physics_process(delta):
@@ -94,3 +97,9 @@ func attack_animation_finished():
 	
 func move():
 	velocity = move_and_slide(velocity)
+
+func _on_Hurtbox_area_entered(area):
+	stats.health -= 1
+	hurtbox.start_invincibility(0.5)
+	hurtbox.create_hit_effect()
+	print("hit")
