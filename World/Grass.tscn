@@ -10,13 +10,12 @@ extents = Vector2( 6.39576, 5.57195 )
 [node name="Grass" type="Node2D"]
 script = ExtResource( 2 )
 
-[node name="Sprite" type="Sprite" parent="."]
+[node name="Grass" type="Sprite" parent="."]
 texture = ExtResource( 1 )
 offset = Vector2( 8, 8 )
 
 [node name="Hurtbox" parent="." instance=ExtResource( 3 )]
 collision_layer = 8
-show_hit = false
 
 [node name="CollisionShape2D" parent="Hurtbox" index="0"]
 position = Vector2( 8, 8 )

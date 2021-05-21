@@ -1,40 +1,45 @@
 extends KinematicBody2D
 
-# Movement variables
-## exports variables as editable properties in the Inspector
+# Preload
+const PlayerHurtSound = preload("res://Player/PlayerHurtSound.tscn")
+
+# Export
+## Movement variables
 export var MAX_SPEED = 120
 export var ACCELERATION = 500
 export var ROLL_SPEED = 125
 export var FRICTION = 500
-## Initializes player velocity variable
-var velocity = Vector2.ZERO
-var roll_vector = Vector2.ZERO
-var stats = PlayerStats
 
-# Animation Variables
+# Onready
+## Animation nodes
+onready var animationPlayer = $AnimationPlayer
+onready var animationTree = $AnimationTree
+onready var animationState = animationTree.get("parameters/playback")
+onready var blinkAnimationPlayer = $BlinkAnimationPlayer
+## Collision nodes
+onready var swordHitbox = $HitboxPivot/SwordHitbox
+onready var hurtbox = $Hurtbox
 
-## List of different animations
+# Enums
+## Player Actions
 enum {
 	MOVE,
 	ROLL,
 	ATTACK
 }
-var state = MOVE
-## Animation nodes
-onready var animationPlayer = $AnimationPlayer
-onready var animationTree = $AnimationTree
-onready var animationState = animationTree.get("parameters/playback")
 
-# Collision node variables
-onready var swordHitbox = $HitboxPivot/SwordHitbox
-onready var hurtbox = $Hurtbox
+# Variables
+var state = MOVE # Default player action
+var velocity = Vector2.ZERO
+var roll_vector = Vector2.ZERO
+var stats = PlayerStats
 
 func _ready():
+	randomize() # randomizes world code
 	animationTree.active = true # Turns animation on
 	swordHitbox.knockback_vector = roll_vector
 	stats.connect("no_health", self, "queue_free")
 	
-
 func _physics_process(delta):
 	# Checks for current animation state
 	match state:
@@ -43,7 +48,7 @@ func _physics_process(delta):
 		ATTACK: attack_state(delta)
 		
 	# Test rotation
-	print($HitboxPivot.rotation_degrees)
+	# print($HitboxPivot.rotation_degrees)
 
 # Movement function
 func move_state(delta):
@@ -63,7 +68,7 @@ func move_state(delta):
 		animationTree.set("parameters/Roll/blend_position", input_vector)
 		animationState.travel("Run")
 		velocity = velocity.move_toward(input_vector * MAX_SPEED, ACCELERATION * delta)
-		print(input_vector)
+		#print(input_vector)
 	else:
 		animationState.travel("Idle")
 		velocity = velocity.move_toward(Vector2.ZERO, FRICTION * delta) # moves player to 0,0 by FRICTION val
@@ -78,12 +83,12 @@ func move_state(delta):
 		state = ROLL
 
 # Attack function
-func attack_state(delta):
+func attack_state(_delta):
 	velocity = Vector2.ZERO
 	animationState.travel("Attack")
 	
 # Roll function
-func roll_state(delta):
+func roll_state(_delta):
 	velocity = roll_vector * ROLL_SPEED
 	animationState.travel("Roll")
 	move()
@@ -94,12 +99,23 @@ func roll_animation_finished():
 
 func attack_animation_finished():
 	state = MOVE
-	
+
+# General movement function
 func move():
 	velocity = move_and_slide(velocity)
 
+# Signal Functions
+
 func _on_Hurtbox_area_entered(area):
-	stats.health -= 1
-	hurtbox.start_invincibility(0.5)
+	stats.health -= area.damage
+	hurtbox.start_invincibility(1)
 	hurtbox.create_hit_effect()
-	print("hit")
+	var playerHurtSound = PlayerHurtSound.instance()
+	get_tree().current_scene.add_child(playerHurtSound)
+
+
+func _on_Hurtbox_invincibility_started():
+	blinkAnimationPlayer.play("Start")
+
+func _on_Hurtbox_invincibility_ended():
+	blinkAnimationPlayer.play("Stop")
